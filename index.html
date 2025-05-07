@@ -1,28 +1,103 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Regresión Lineal con TensorFlow.js</title>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.12.0/dist/tf.min.js"></script>
-  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Regresión Lineal con TensorFlow.js</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link rel="stylesheet" href="style.css">
 </head>
-<body class="container my-4">
-  <h2>Predicción con TensorFlow</h2>
-  <button class="btn btn-success mb-3" onclick="entrenarModelo()">Entrenar Modelo</button>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f6f8;
+    margin: 0;
+    padding: 0;
+    color: #333;
+}
 
-  <h4>Gráfica de Pérdida durante el Entrenamiento</h4>
-  <div id="lossPlot" style="height: 300px;"></div>
-  <p id="lossSummary" class="mt-2"></p>
+h1 {
+    text-align: center;
+    background-color: #3f51b5;
+    color: white;
+    padding: 1rem;
+    margin: 0 0 1rem;
+}
 
-  <hr />
-  <h4>Predicción</h4>
-  <label for="inputX">Valores de X (separados por comas):</label>
-  <input type="text" id="inputX" value="10, 20, 25" class="form-control w-50 d-inline-block" />
-  <button class="btn btn-primary mt-2" onclick="predecir()">Predecir</button>
+.container {
+    max-width: 600px;
+    margin: 1rem auto;
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
 
-  <div id="resultado" class="mt-4"></div>
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+}
 
-  <script src="script.js"></script>
+textarea {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    resize: vertical;
+    margin-bottom: 1rem;
+}
+
+button {
+    background-color: #3f51b5;
+    color: white;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #303f9f;
+}
+
+.results {
+    margin-top: 1rem;
+    font-size: 1.1rem;
+    color: #2e7d32;
+}
+
+.chart-container {
+    margin-top: 1rem;
+    border: 1px solid #ccc;
+    padding: 1rem;
+    background: #fafafa;
+    border-radius: 6px;
+}
+
+</style>
+<body>
+    <h1>Modelo de Regresión Lineal</h1>
+    
+    <div class="container">
+        <p>Fórmula original: y = 2x + 6</p>
+        <label for="inputX">Ingrese valores para x (separados por comas):</label>
+        <textarea id="inputX" rows="2" placeholder="Ejemplo: 1, 2, 3, 4"></textarea>
+        <button onclick="predecirValor()">Predecir valores</button>
+    </div>
+
+    <div class="container">
+        <div id="estadoEntrenamiento">Espere un momento, se está entrenando el modelo...</div>
+        <div id="resultado" class="results"></div>
+    </div>
+
+    <div class="container">
+        <h3>Pérdida durante el entrenamiento</h3>
+        <div id="graficoPerdida" class="chart-container"></div>
+    </div>
+ <script src="script.js"></script>
 </body>
 </html>

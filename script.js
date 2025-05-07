@@ -1,74 +1,83 @@
 let model;
-let lossData = [];
+
+let valoresPerdida = [];
 
 async function entrenarModelo() {
-  const xs = tf.tensor2d([1, 2, 3, 4, 5, 6, 7, 8], [8, 1]);
-  const ys = tf.tensor2d([3, 5, 7, 9, 11, 13, 15, 17], [8, 1]);
-
   model = tf.sequential();
   model.add(tf.layers.dense({ units: 1, inputShape: [1] }));
-  model.compile({ loss: 'meanSquaredError', optimizer: 'sgd' });
+  model.compile({ loss: "meanSquaredError", optimizer: "sgd" });
 
-  lossData = [];
+  const xs = tf.tensor2d([-9 ,-8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], [21, 1]);
+  const ys = tf.tensor2d([-12 ,-10, -8 ,-6, -4, -2, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28], [21, 1]);
+
+  valoresPerdida = [];
+
   await model.fit(xs, ys, {
-    epochs: 100,
+    epochs: 380,
     callbacks: {
-      onEpochEnd: (epoch, logs) => {
-        lossData.push({ epoch, loss: logs.loss });
-      }
-    }
+      onEpochEnd: async (epoch, logs) => {
+        valoresPerdida.push({ epoch: epoch, loss: logs.loss });
+        console.log(`Época ${epoch +1}: pérdida = ${logs.loss.toFixed(4)}`);
+      },
+      onTrainEnd: () => {
+        document.getElementById("estadoEntrenamiento").innerHTML =
+          "Entrenamiento terminado, ya puede predecir";
+        graficarPerdida();
+      },
+    },
   });
-
-  graficarPerdida();
 }
 
-function graficarPerdida() {
-  const epochs = lossData.map(d => d.epoch);
-  const losses = lossData.map(d => d.loss);
+function predecirValor() {
+  const inputStr = document.getElementById("inputX").value;
+  if (!inputStr.trim()) {
+    document.getElementById("resultado").innerHTML =
+      "Por favor ingrese valores para predecir";
+    return;
+  }
+  const valores = inputStr
+    .split(",")
+    .map((v) => parseFloat(v.trim()))
+    .filter((v) => !isNaN(v));
 
-  const trace = {
-    x: epochs,
-    y: losses,
-    type: 'scatter',
-    mode: 'lines+markers',
-    marker: { color: 'blue' },
-    name: 'Loss'
-  };
-
-  const layout = {
-    title: 'Evolución de la Pérdida (Loss)',
-    xaxis: { title: 'Época' },
-    yaxis: { title: 'Pérdida' },
-    margin: { t: 30 }
-  };
-
-  Plotly.newPlot('lossPlot', [trace], layout);
-
-  const inicial = losses[0].toFixed(4);
-  const final = losses.at(-1).toFixed(4);
-  const reduccion = ((1 - final / inicial) * 100).toFixed(2);
-  document.getElementById("lossSummary").textContent =
-    `Pérdida inicial: ${inicial}, final: ${final} (Reducción: ${reduccion}%)`;
-}
-
-function predecir() {
-  const input = document.getElementById("inputX").value;
-  const valores = input.split(",").map(v => parseFloat(v.trim())).filter(v => !isNaN(v));
-
-  if (!model || valores.length === 0) {
-    document.getElementById("resultado").innerHTML = "Modelo no entrenado o entrada inválida.";
+  if (valores.length === 0) {
+    document.getElementById("resultado").innerHTML =
+      "Entrada no válida. Ingrese números separados por comas.";
     return;
   }
 
-  const inputTensor = tf.tensor2d(valores, [valores.length, 1]);
-  const outputTensor = model.predict(inputTensor);
+  const prediccion = model.predict(tf.tensor2d(valores, [valores.length, 1]));
+  const resultados = prediccion.dataSync();
 
-  outputTensor.array().then(predicciones => {
-    let html = "<strong>Estado:</strong> Modelo entrenado correctamente<br><br><strong>Resultados:</strong><ul>";
-    valores.forEach((x, i) => {
-      html += `<li>Para x = ${x}: y = ${predicciones[i][0].toFixed(2)}</li>`;
-    });
-    html += "</ul>";
-    document.getElementById("resultado").innerHTML = html;
-  });
+  // mostrar el resultado en una tabla
+  let html =
+  "<h4>Resultados de predicción:</h4><table cellpadding='5'><tr><th>x</th><th>predicho</th></tr>";
+
+valores.forEach((x, i) => {
+  html += `<tr><td>${x}</td><td>${resultados[i].toFixed(2)}</td></tr>`;
+});
+
+  html += "</table>";
+  document.getElementById("resultado").innerHTML = html;
 }
+
+function graficarPerdida() {
+  const trace = {
+    x: valoresPerdida.map((d) => d.epoch), // eje x : epocas
+    y: valoresPerdida.map((d) => d.loss), // eje y: valores de pérdida
+    mode: "lines", // tipo de grafico
+    name: "Pérdida", // nombre de la serie
+    line: { color: "purple", width: 2 },
+  };
+  // config del siseño del grafico
+  const layout = {
+    title: "Pérdida durante el entrenamiento",
+    xaxis: { title: "Época" },
+    yaxis: { title: "Pérdida" },
+  };
+  // renderizar con plotly
+  Plotly.newPlot("graficoPerdida", [trace], layout);
+}
+
+// Iniciar el entrenamiento al cargar la página
+document.addEventListener("DOMContentLoaded", entrenarModelo);
